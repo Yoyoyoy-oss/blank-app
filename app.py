@@ -45,10 +45,26 @@ UPGRADES = {
     "Dyson Sphere": {"cost": 2000000, "bonus": 200000, "requires": ["Mine Astéroïde"], "pos": (2, 10), "icon": "☀️", "category": "ultimate"},
     
     "Univers Parallèle": {"cost": 10000000, "bonus": 1000000, "requires": ["Dyson Sphere"], "pos": (2, 11), "icon": "🌌", "category": "ultimate"},
+    # Nouveaux ajouts pour l'arbre
+    "Réacteur d'Énergie Infinie": {"cost": 3000000, "bonus": 300000, "requires": ["Dyson Sphere"], "pos": (0, 12), "icon": "🔋", "category": "ultimate"},
+    "Moteur Interdimensionnel": {"cost": 5000000, "bonus": 500000, "requires": ["Univers Parallèle"], "pos": (2, 12), "icon": "🛸", "category": "tech"},
+    "Architecte de Réalités": {"cost": 8000000, "bonus": 800000, "requires": ["Moteur Interdimensionnel", "Réacteur d'Énergie Infinie"], "pos": (4, 12), "icon": "🏛️", "category": "ultimate"},
+    "Collecteur Quantique": {"cost": 1200000, "bonus": 120000, "requires": ["Dyson Sphere"], "pos": (1, 13), "icon": "🧲", "category": "tech"},
+    "Réseau d'IA Globale": {"cost": 2500000, "bonus": 250000, "requires": ["Collecteur Quantique"], "pos": (3, 13), "icon": "🌐", "category": "industry"},
 }
 
 def load_game():
-    default_data = {"points": 0, "points_per_click": 1, "unlocked": [], "last_idle_time": time.time()}
+    default_data = {
+        "points": 0,
+        "points_per_click": 1,
+        "unlocked": [],
+        "last_idle_time": time.time(),
+        "prestige_points": 0,
+        "prestige_level": 0,
+        "prestige_multiplier": 1.0,
+        "total_earned": 0,
+        "highest_points": 0,
+    }
     if os.path.exists(SAVE_FILE):
         try:
             with open(SAVE_FILE, "r") as f:
@@ -80,8 +96,12 @@ def calculate_idle_points():
     last_time = data.get("last_idle_time", current_time)
     elapsed_seconds = int(current_time - last_time)
     if elapsed_seconds > 0:
-        idle_points = elapsed_seconds * data["points_per_click"]
+        multiplier = data.get("prestige_multiplier", 1.0)
+        idle_points = int(elapsed_seconds * data["points_per_click"] * multiplier)
         data["points"] += idle_points
+        data["total_earned"] = data.get("total_earned", 0) + idle_points
+        if data["points"] > data.get("highest_points", 0):
+            data["highest_points"] = data["points"]
         data["last_idle_time"] = current_time
         save_game(data)
         return idle_points
@@ -89,9 +109,23 @@ def calculate_idle_points():
 
 def click():
     data = get_game_data()
-    data["points"] += data["points_per_click"]
+    multiplier = data.get("prestige_multiplier", 1.0)
+    gained = int(data["points_per_click"] * multiplier)
+    data["points"] += gained
+    data["total_earned"] = data.get("total_earned", 0) + gained
+    if data["points"] > data.get("highest_points", 0):
+        data["highest_points"] = data["points"]
     data["last_idle_time"] = time.time()
     save_game(data)
+
+def calculate_prestige_reward(data):
+    """Calcule combien de points de prestige le joueur obtiendrait en renaissant.
+    Formule simple : 1 point de prestige pour chaque tranche de 100000 points totaux gagnés.
+    Utilise le meilleur des points actuels et total_earned pour encourager progression.
+    """
+    base = max(data.get("points", 0), data.get("highest_points", 0), data.get("total_earned", 0))
+    reward = int(base // 100000)
+    return reward
 
 def buy_upgrade(name):
     data = get_game_data()
@@ -272,9 +306,42 @@ with col1:
 
 with col2:
     if st.button("🔄 Nouvelle Partie", use_container_width=True):
-        st.session_state.game_data = {"points": 0, "points_per_click": 1, "unlocked": [], "last_idle_time": time.time()}
+        # Nouvelle partie sans supprimer les points de prestige
+        preserved = {
+            "prestige_points": data.get("prestige_points", 0),
+            "prestige_level": data.get("prestige_level", 0),
+            "prestige_multiplier": data.get("prestige_multiplier", 1.0),
+        }
+        st.session_state.game_data = {"points": 0, "points_per_click": 1, "unlocked": [], "last_idle_time": time.time(), **preserved, "total_earned": 0, "highest_points": 0}
         save_game(st.session_state.game_data)
         st.rerun()
+
+# Section Renaissances (Prestige)
+st.markdown("---")
+st.subheader("✨ Renaissances")
+st.markdown(f"**Points de prestige:** {data.get('prestige_points', 0)}  — Multiplicateur: x{data.get('prestige_multiplier', 1.0):.2f}")
+potential = calculate_prestige_reward(data)
+st.markdown(f"Récompense possible en renaissant: **{potential}** point(s) de prestige")
+
+if potential > 0:
+    if st.button(f"🔁 Renaître maintenant (obtenir {potential} pts prestige)", use_container_width=True):
+        reward = potential
+        data["prestige_points"] = data.get("prestige_points", 0) + reward
+        data["prestige_level"] = data.get("prestige_level", 0) + reward
+        data["prestige_multiplier"] = 1.0 + data.get("prestige_points", 0) * 0.01
+
+        # Réinitialiser la progression normale mais garder les gains de prestige
+        data["points"] = 0
+        data["points_per_click"] = 1
+        data["unlocked"] = []
+        data["last_idle_time"] = time.time()
+        data["total_earned"] = 0
+        data["highest_points"] = 0
+        save_game(data)
+        st.success(f"Tu as gagné {reward} point(s) de prestige ! Multiplicateur x{data['prestige_multiplier']:.2f}")
+        st.rerun()
+else:
+    st.info("Pas encore assez de progression pour renaître. Atteins plus de points pour obtenir une récompense de prestige.")
 
 st.markdown("---")
 st.caption("💡 Le jeu sauvegarde automatiquement. Tu gagnes des points même quand tu es absent!")
