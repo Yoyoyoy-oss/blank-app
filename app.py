@@ -81,6 +81,30 @@ def save_game(data):
     with open(SAVE_FILE, "w") as f:
         json.dump(data, f)
 
+
+def export_save_json(data):
+    """Retourne la sauvegarde sous forme JSON formaté pour téléchargement."""
+    try:
+        return json.dumps(data, indent=2, ensure_ascii=False)
+    except Exception:
+        return json.dumps(data, ensure_ascii=False)
+
+
+def import_save_from_bytes(b: bytes):
+    """Tente de charger une sauvegarde depuis des bytes, retourne tuple (ok, data_or_error)."""
+    try:
+        text = b.decode("utf-8")
+        loaded = json.loads(text)
+        # Minimal validation
+        if not isinstance(loaded, dict):
+            return False, "Format invalide: la racine doit être un objet JSON."
+        # Ensure required keys exist (we'll fill missing with defaults later)
+        if not any(k in loaded for k in ("points", "points_per_click", "unlocked")):
+            return False, "Fichier manquant des clés essentielles (points/points_per_click/unlocked)."
+        return True, loaded
+    except Exception as e:
+        return False, f"Erreur lors du parsing JSON: {e}"
+
 def init_session_state():
     if "game_data" not in st.session_state:
         st.session_state.game_data = load_game()
@@ -345,3 +369,49 @@ else:
 
 st.markdown("---")
 st.caption("💡 Le jeu sauvegarde automatiquement. Tu gagnes des points même quand tu es absent!")
+
+# Import / Export UI
+st.markdown("---")
+st.subheader("🔄 Import / Export de la sauvegarde")
+col_exp, col_imp = st.columns([1, 1])
+with col_exp:
+    export_str = export_save_json(data)
+    st.download_button("⬇️ Exporter la sauvegarde", data=export_str, file_name="savegame_export.json", mime="application/json")
+
+with col_imp:
+    uploaded = st.file_uploader("⬆️ Importer une sauvegarde (.json)", type=["json"]) 
+    if uploaded is not None:
+        ok, result = import_save_from_bytes(uploaded.read())
+        if not ok:
+            st.error(result)
+        else:
+            st.write("Aperçu de la sauvegarde importée:")
+            st.json(result)
+            mode = st.radio("Mode d'importation", ("merge", "overwrite"), index=0)
+            if st.button("📥 Appliquer la sauvegarde importée"):
+                # merge or overwrite
+                if mode == "overwrite":
+                    # Fill missing keys with defaults
+                    default = load_game()
+                    merged = default
+                    merged.update(result)
+                    st.session_state.game_data = merged
+                    save_game(st.session_state.game_data)
+                    st.success("Sauvegarde importée (overwrite).")
+                    st.rerun()
+                else:
+                    # merge: update only provided keys
+                    cur = get_game_data()
+                    for k, v in result.items():
+                        cur[k] = v
+                    # ensure required fields
+                    default = load_game()
+                    for k, v in default.items():
+                        if k not in cur:
+                            cur[k] = v
+                    st.session_state.game_data = cur
+                    save_game(st.session_state.game_data)
+                    st.success("Sauvegarde importée (merge).")
+                    st.rerun()
+
+st.markdown("---")
