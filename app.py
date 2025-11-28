@@ -702,6 +702,10 @@ with col2:
 if st.session_state.get("show_prestige", False):
     potential = calculate_prestige_reward(data)
 
+    # Diagnostic visible pour debugging: indique si la pop-up doit s'ouvrir
+    st.warning("DEBUG: show_prestige = True — tentative d'ouverture de la modal...")
+    st.write("st.modal disponible:", hasattr(st, 'modal'))
+
     # Use Streamlit's modal component to render a true pop-up with interactive widgets
     try:
         with st.modal("✨ Améliorations de Prestige"):
