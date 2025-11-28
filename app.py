@@ -601,6 +601,7 @@ if st.session_state.get("show_prestige", False):
             align-items: center;
             margin-top: 10px;
             margin-bottom: 10px;
+            pointer-events: none; /* allow clicks through the outer wrapper */
         ">
             <div style="
                 width: 90%;
@@ -611,6 +612,7 @@ if st.session_state.get("show_prestige", False):
                 border-radius: 14px;
                 padding: 18px;
                 box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+                pointer-events: auto; /* allow interacting with inner content if needed */
             ">
                 <h2 style='margin-top:0; margin-bottom:6px;'>✨ Améliorations de Prestige</h2>
                 <p style='margin:0 0 8px 0;'>Points de prestige: <strong>{pts}</strong> — Niveau: <strong>{lvl}</strong></p>
