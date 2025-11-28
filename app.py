@@ -5,6 +5,9 @@ import time
 
 st.set_page_config(page_title="Furytoad IUT", layout="wide")
 
+# Version (inscrite au moment du commit) — utile pour vérifier la version déployée
+VERSION = "f79e91d"
+
 SAVE_FILE = "savegame.json"
 
 UPGRADES = {
@@ -792,7 +795,7 @@ if st.session_state.get("show_prestige", False):
             st.info("Pas encore assez de progression pour renaître. Atteins plus de points!")
 
 st.markdown("---")
-st.caption("💡 Le jeu sauvegarde automatiquement. Tu gagnes des points même quand tu es absent!")
+st.caption(f"💡 Le jeu sauvegarde automatiquement. Tu gagnes des points même quand tu es absent! — Version: {VERSION}")
 
 # Affichage de l'arbre magique (débloqué après 5 renaissances)
 if is_magic_tree_available(data):
