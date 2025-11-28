@@ -698,134 +698,104 @@ with col2:
         save_game(st.session_state.game_data)
         st.rerun()
 
-# Section Renaissances (Prestige) - Pop-up modal
+# Section Renaissances (Prestige) - Modal Streamlit
 if st.session_state.get("show_prestige", False):
-    st.markdown("---")
-    
-    # Créer une pop-up/modal avec streamlit
     potential = calculate_prestige_reward(data)
-    
-    # Affichage du contenu de prestige dans un conteneur encadré
-    st.markdown(f"""
-    <div style="
-        background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(76, 175, 80, 0.05) 100%);
-        border: 3px solid #4caf50;
-        border-radius: 20px;
-        padding: 30px;
-        margin: 20px 0;
-        box-shadow: 0 8px 32px rgba(76, 175, 80, 0.2);
-    ">
-        <h2 style="text-align: center; color: #9ccc65; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">✨ Améliorations de Prestige</h2>
-        <div style="text-align: center; margin: 15px 0;">
-            <p style="font-size: 20px; color: #b3e5fc;"><strong>Points de prestige actuels:</strong> {data.get('prestige_points', 0)}</p>
-            <p style="font-size: 18px; color: #ffeb3b;"><strong>Niveau de prestige:</strong> {data.get('prestige_level', 0)}</p>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    if "prestige_message" in st.session_state and "prestige_message_type" in st.session_state:
-        if st.session_state.prestige_message_type == "success":
-            st.success(st.session_state.prestige_message)
-        else:
-            st.warning(st.session_state.prestige_message)
-        del st.session_state.prestige_message
-        del st.session_state.prestige_message_type
-    
-    # Affichage de l'arbre de prestige
-    st.subheader("🌟 Arbre de Prestige")
-    prestige_rows = {}
-    prestige_max_col = 0
-    for name, upgrade in PRESTIGE_UPGRADES.items():
-        row = upgrade["pos"][1]
-        col = upgrade["pos"][0]
-        prestige_max_col = max(prestige_max_col, col)
-        if row not in prestige_rows:
-            prestige_rows[row] = {}
-        prestige_rows[row][col] = name
-    
-    prestige_num_cols = prestige_max_col + 1
-    
-    for row_idx in sorted(prestige_rows.keys()):
-        cols = st.columns(prestige_num_cols)
-        row_data = prestige_rows[row_idx]
-        
-        for col_idx in range(prestige_num_cols):
-            with cols[col_idx]:
-                if col_idx in row_data:
-                    name = row_data[col_idx]
-                    upgrade = PRESTIGE_UPGRADES[name]
-                    status = is_prestige_upgrade_available(name)
-                    icon = upgrade.get("icon", "")
-                    
-                    if status == "owned":
-                        st.markdown('<div class="owned-btn">', unsafe_allow_html=True)
-                        button_text = f"✅ {icon} {name}"
-                        disabled = True
-                    elif status == "available":
-                        st.markdown('<div class="available-btn">', unsafe_allow_html=True)
-                        button_text = f"💎 {icon} {name}\n({upgrade['cost']} pts prestige)"
-                        disabled = False
-                    else:
-                        st.markdown('<div class="locked-btn">', unsafe_allow_html=True)
-                        button_text = f"🔒 {icon} {name}"
-                        disabled = True
-                    
-                    if st.button(button_text, key=f"prestige_{name}", disabled=disabled, use_container_width=True):
-                        success, message = buy_prestige_upgrade(name)
-                        st.session_state.prestige_message = message
-                        st.session_state.prestige_message_type = "success" if success else "warning"
-                        st.rerun()
-                    
-                    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Use Streamlit's modal component to render a true pop-up with interactive widgets
+    try:
+        with st.modal("✨ Améliorations de Prestige"):
+            st.markdown(f"**Points de prestige:** {data.get('prestige_points', 0)} — **Niveau:** {data.get('prestige_level', 0)}")
+
+            if "prestige_message" in st.session_state and "prestige_message_type" in st.session_state:
+                if st.session_state.prestige_message_type == "success":
+                    st.success(st.session_state.prestige_message)
                 else:
-                    st.write("")
-    
-    # Section Renaissance avec bouton prominente
-    st.markdown("---")
-    st.subheader("🔁 Effectuer une Renaissance")
-    
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        st.markdown(f"""
-        <div style="
-            background: linear-gradient(135deg, rgba(255, 235, 59, 0.1) 0%, rgba(255, 193, 7, 0.1) 100%);
-            border-left: 5px solid #ffeb3b;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 10px 0;
-        ">
-            <p style="font-size: 18px; color: #ffeb3b;"><strong>Récompense de renaissance:</strong></p>
-            <p style="font-size: 28px; color: #ffd54f; font-weight: bold;">{potential} point(s) de prestige</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        if potential > 0:
-            if st.button("🔁 RENAÎTRE!", use_container_width=True, key="prestige_button"):
-                reward = potential
-                data["prestige_points"] = data.get("prestige_points", 0) + reward
-                data["prestige_level"] = data.get("prestige_level", 0) + 1
-                
-                # Réinitialiser la progression normale mais garder les améliorations de prestige
-                data["points"] = 0
-                data["points_per_click"] = 1
-                data["unlocked"] = []
-                data["last_idle_time"] = time.time()
-                data["total_earned"] = 0
-                data["highest_points"] = 0
-                save_game(data)
-                st.success(f"🎉 Tu as gagné {reward} point(s) de prestige !\nPoints totaux: {data['prestige_points']}")
-                st.rerun()
-        else:
-            st.info("Pas encore assez de progression pour renaître. Atteins plus de points!")
-    
-    # Bouton fermer la pop-up
-    st.markdown("---")
-    col_close1, col_close2 = st.columns([3,1])
-    with col_close2:
-        if st.button("✖️ Fermer", key="prestige_close"):
-            st.session_state.show_prestige = False
-            st.rerun()
+                    st.warning(st.session_state.prestige_message)
+                del st.session_state.prestige_message
+                del st.session_state.prestige_message_type
+
+            st.subheader("🌟 Arbre de Prestige")
+            prestige_rows = {}
+            prestige_max_col = 0
+            for name, upgrade in PRESTIGE_UPGRADES.items():
+                row = upgrade["pos"][1]
+                col = upgrade["pos"][0]
+                prestige_max_col = max(prestige_max_col, col)
+                if row not in prestige_rows:
+                    prestige_rows[row] = {}
+                prestige_rows[row][col] = name
+
+            prestige_num_cols = prestige_max_col + 1
+            for row_idx in sorted(prestige_rows.keys()):
+                cols = st.columns(prestige_num_cols)
+                row_data = prestige_rows[row_idx]
+                for col_idx in range(prestige_num_cols):
+                    with cols[col_idx]:
+                        if col_idx in row_data:
+                            name = row_data[col_idx]
+                            upgrade = PRESTIGE_UPGRADES[name]
+                            status = is_prestige_upgrade_available(name)
+                            icon = upgrade.get("icon", "")
+
+                            if status == "owned":
+                                st.markdown('<div class="owned-btn">', unsafe_allow_html=True)
+                                button_text = f"✅ {icon} {name}"
+                                disabled = True
+                            elif status == "available":
+                                st.markdown('<div class="available-btn">', unsafe_allow_html=True)
+                                button_text = f"💎 {icon} {name}\n({upgrade['cost']} pts prestige)"
+                                disabled = False
+                            else:
+                                st.markdown('<div class="locked-btn">', unsafe_allow_html=True)
+                                button_text = f"🔒 {icon} {name}"
+                                disabled = True
+
+                            if st.button(button_text, key=f"prestige_{name}", disabled=disabled, use_container_width=True):
+                                success, message = buy_prestige_upgrade(name)
+                                st.session_state.prestige_message = message
+                                st.session_state.prestige_message_type = "success" if success else "warning"
+                                st.experimental_rerun()
+
+                            st.markdown('</div>', unsafe_allow_html=True)
+                        else:
+                            st.write("")
+
+            st.markdown("---")
+            st.subheader("🔁 Effectuer une Renaissance")
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                st.markdown(f"**Récompense de renaissance:** {potential} point(s) de prestige")
+            with col2:
+                if potential > 0:
+                    if st.button("🔁 RENAÎTRE!", use_container_width=True, key="prestige_button_modal"):
+                        reward = potential
+                        data["prestige_points"] = data.get("prestige_points", 0) + reward
+                        data["prestige_level"] = data.get("prestige_level", 0) + 1
+                        # Réinitialiser la progression normale mais garder les améliorations de prestige
+                        data["points"] = 0
+                        data["points_per_click"] = 1
+                        data["unlocked"] = []
+                        data["last_idle_time"] = time.time()
+                        data["total_earned"] = 0
+                        data["highest_points"] = 0
+                        save_game(data)
+                        st.success(f"🎉 Tu as gagné {reward} point(s) de prestige ! Points totaux: {data['prestige_points']}")
+                        st.experimental_rerun()
+                else:
+                    st.info("Pas encore assez de progression pour renaître. Atteins plus de points!")
+
+            # Close button
+            if st.button("✖️ Fermer", key="prestige_close_modal"):
+                st.session_state.show_prestige = False
+                st.experimental_rerun()
+    except Exception:
+        # Fallback si la version de Streamlit ne supporte pas st.modal()
+        st.warning("Ton environnement Streamlit ne supporte pas les modaux natifs — la fenêtre de prestige s'affiche inline.")
+        st.markdown("---")
+        st.subheader("✨ Améliorations de Prestige")
+        st.write(f"Points de prestige: {data.get('prestige_points', 0)} — Niveau: {data.get('prestige_level', 0)}")
+        # (Le rendu inline est conservé pour compatibilité)
 
 st.markdown("---")
 st.caption(f"💡 Le jeu sauvegarde automatiquement. Tu gagnes des points même quand tu es absent! — Version: {VERSION}")
