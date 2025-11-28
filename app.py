@@ -585,6 +585,66 @@ html = '''
 '''
 st.markdown(html, unsafe_allow_html=True)
 
+# Quick inline modal (placed high in the page) as a fallback that DOES NOT depend on st.modal
+# This ensures the prestige UI appears even if modals are unsupported or blocked by CSS.
+if st.session_state.get("show_prestige", False):
+    # Render near the top so it's visible immediately
+    with st.container():
+        st.markdown("""
+        <div style="
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        ">
+            <div style="
+                width: 90%;
+                max-width: 900px;
+                background: rgba(13,61,31,0.95);
+                color: #e8f5e9;
+                border: 3px solid #4caf50;
+                border-radius: 14px;
+                padding: 18px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            ">
+                <h2 style='margin-top:0; margin-bottom:6px;'>✨ Améliorations de Prestige</h2>
+                <p style='margin:0 0 8px 0;'>Points de prestige: <strong>" + str(st.session_state.get('game_data', {}).get('prestige_points', 0)) + "</strong> — Niveau: <strong>" + str(st.session_state.get('game_data', {}).get('prestige_level', 0)) + "</strong></p>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Simple interactive controls (Streamlit buttons) shown right after the HTML box
+    potential_quick = calculate_prestige_reward(get_game_data())
+    st.write(f"Récompense possible: **{potential_quick}** pts prestige")
+    col_a, col_b = st.columns([3,1])
+    with col_b:
+        if st.button("🔁 Renaître (rapide)", key="prestige_quick"):
+            data = get_game_data()
+            if potential_quick > 0:
+                reward = potential_quick
+                data["prestige_points"] = data.get("prestige_points", 0) + reward
+                data["prestige_level"] = data.get("prestige_level", 0) + 1
+                data["points"] = 0
+                data["points_per_click"] = 1
+                data["unlocked"] = []
+                data["last_idle_time"] = time.time()
+                data["total_earned"] = 0
+                data["highest_points"] = 0
+                save_game(data)
+                st.success(f"🎉 Renaissance effectuée: +{reward} pts prestige")
+                st.session_state.show_prestige = False
+                st.experimental_rerun()
+            else:
+                st.info("Pas assez de progression pour renaître.")
+    with col_a:
+        if st.button("✖️ Fermer (rapide)", key="prestige_quick_close"):
+            st.session_state.show_prestige = False
+            st.experimental_rerun()
+
+
 # Bouton de prestige et thème en haut à droite
 col_title, col_theme, col_prestige = st.columns([4, 1, 1])
 with col_theme:
