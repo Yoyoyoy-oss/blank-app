@@ -594,7 +594,8 @@ with col_theme:
 
 with col_prestige:
     if st.button("✨ Prestige", use_container_width=True):
-        st.session_state.show_prestige = not st.session_state.get("show_prestige", False)
+        # Ouvre la pop-up (force à True)
+        st.session_state.show_prestige = True
         st.rerun()
 
 if idle_earned > 0:
@@ -817,6 +818,14 @@ if st.session_state.get("show_prestige", False):
                 st.rerun()
         else:
             st.info("Pas encore assez de progression pour renaître. Atteins plus de points!")
+    
+    # Bouton fermer la pop-up
+    st.markdown("---")
+    col_close1, col_close2 = st.columns([3,1])
+    with col_close2:
+        if st.button("✖️ Fermer", key="prestige_close"):
+            st.session_state.show_prestige = False
+            st.rerun()
 
 st.markdown("---")
 st.caption(f"💡 Le jeu sauvegarde automatiquement. Tu gagnes des points même quand tu es absent! — Version: {VERSION}")
