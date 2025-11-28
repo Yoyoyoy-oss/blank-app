@@ -3,7 +3,7 @@ import json
 import os
 import time
 
-st.set_page_config(page_title="Furytoad's Incremental Tree", layout="wide")
+st.set_page_config(page_title="Furytoad IUT", layout="wide")
 
 SAVE_FILE = "savegame.json"
 
@@ -556,7 +556,7 @@ st.markdown(f"""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🌳 Furytoad's Incremental Tree")
+st.title("🌳 Furytoad IUT")
 
 # Bouton de prestige et thème en haut à droite
 col_title, col_theme, col_prestige = st.columns([4, 1, 1])
