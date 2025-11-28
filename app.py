@@ -561,6 +561,30 @@ st.markdown(f"""
 
 st.title("🌳 Furytoad IUT")
 
+# Petit badge de version fixe en coin pour vérification rapide
+html = '''
+<style>
+.version-badge {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    z-index: 9999;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.08);
+}
+@media (prefers-color-scheme: light) {
+    .version-badge { background: rgba(0,0,0,0.12); color: #13320f; }
+}
+</style>
+<div class="version-badge">v'''+ VERSION + '''</div>
+'''
+st.markdown(html, unsafe_allow_html=True)
+
 # Bouton de prestige et thème en haut à droite
 col_title, col_theme, col_prestige = st.columns([4, 1, 1])
 with col_theme:
