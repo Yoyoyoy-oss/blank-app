@@ -590,7 +590,9 @@ st.markdown(html, unsafe_allow_html=True)
 if st.session_state.get("show_prestige", False):
     # Render near the top so it's visible immediately
     with st.container():
-        st.markdown("""
+        pts = st.session_state.get('game_data', {}).get('prestige_points', 0)
+        lvl = st.session_state.get('game_data', {}).get('prestige_level', 0)
+        html_box = f"""
         <div style="
             position: relative;
             width: 100%;
@@ -611,10 +613,11 @@ if st.session_state.get("show_prestige", False):
                 box-shadow: 0 10px 30px rgba(0,0,0,0.6);
             ">
                 <h2 style='margin-top:0; margin-bottom:6px;'>✨ Améliorations de Prestige</h2>
-                <p style='margin:0 0 8px 0;'>Points de prestige: <strong>" + str(st.session_state.get('game_data', {}).get('prestige_points', 0)) + "</strong> — Niveau: <strong>" + str(st.session_state.get('game_data', {}).get('prestige_level', 0)) + "</strong></p>
+                <p style='margin:0 0 8px 0;'>Points de prestige: <strong>{pts}</strong> — Niveau: <strong>{lvl}</strong></p>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """
+        st.markdown(html_box, unsafe_allow_html=True)
 
     # Simple interactive controls (Streamlit buttons) shown right after the HTML box
     potential_quick = calculate_prestige_reward(get_game_data())
