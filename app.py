@@ -471,13 +471,14 @@ st.markdown(f"""
     .ppc-display {{
         font-size: 20px;
         text-align: center;
-        color: #b3e5fc;
+        color: #ffffff !important;
         margin-bottom: 20px;
         padding: 15px;
-        background: rgba(76, 175, 80, 0.2);
+        background: rgba(0, 0, 0, 0.35) !important;
         border-left: 4px solid #4caf50;
         border-radius: 5px;
-        font-weight: bold;
+        font-weight: 700;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
     }}
     
     /* Conteneur de l'arbre */
@@ -489,6 +490,14 @@ st.markdown(f"""
         margin: 20px 0;
         animation: grow 0.6s ease-out;
     }}
+
+    /* Improve readability for modal/fallback box */
+    .prestige-box * {
+        color: #f1f8ee !important;
+    }
+    .prestige-box p, .prestige-box h2 {
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.6);
+    }
     
     /* Séparateur */
     hr {{
