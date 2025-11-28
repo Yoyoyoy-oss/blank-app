@@ -641,13 +641,13 @@ if st.session_state.get("show_prestige", False):
                 save_game(data)
                 st.success(f"🎉 Renaissance effectuée: +{reward} pts prestige")
                 st.session_state.show_prestige = False
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.info("Pas assez de progression pour renaître.")
     with col_a:
         if st.button("✖️ Fermer (rapide)", key="prestige_quick_close"):
             st.session_state.show_prestige = False
-            st.experimental_rerun()
+            st.rerun()
 
 
 # Bouton de prestige et thème en haut à droite
@@ -824,7 +824,7 @@ if st.session_state.get("show_prestige", False):
                                 success, message = buy_prestige_upgrade(name)
                                 st.session_state.prestige_message = message
                                 st.session_state.prestige_message_type = "success" if success else "warning"
-                                st.experimental_rerun()
+                                st.rerun()
 
                             st.markdown('</div>', unsafe_allow_html=True)
                         else:
@@ -850,14 +850,14 @@ if st.session_state.get("show_prestige", False):
                         data["highest_points"] = 0
                         save_game(data)
                         st.success(f"🎉 Tu as gagné {reward} point(s) de prestige ! Points totaux: {data['prestige_points']}")
-                        st.experimental_rerun()
+                        st.rerun()
                 else:
                     st.info("Pas encore assez de progression pour renaître. Atteins plus de points!")
 
             # Close button
             if st.button("✖️ Fermer", key="prestige_close_modal"):
                 st.session_state.show_prestige = False
-                st.experimental_rerun()
+                st.rerun()
     except Exception:
         # Fallback si la version de Streamlit ne supporte pas st.modal()
         st.warning("Ton environnement Streamlit ne supporte pas les modaux natifs — la fenêtre de prestige s'affiche inline.")
